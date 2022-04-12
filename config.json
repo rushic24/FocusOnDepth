@@ -8,13 +8,13 @@
         "read":"projection",
         "resample_dim":256,
         "optim":"adam",
-        "lr_backbone":1e-5,
+        "lr_backbone":1e-4,
         "lr_scratch":3e-4,
         "loss_depth":"ssi",
         "loss_segmentation":"l1_ce",
         "weights_loss_l1_ce":[0.001, 0.01, 0.1, 0.2, 0.3, 0.389],
         "momentum":0.9,
-        "epochs":1,
+        "epochs":300,
         "batch_size":2,
         "path_model":"models",
         "path_predicted_images":"output",
@@ -24,14 +24,14 @@
     "Dataset":{
         "paths":{
             "path_dataset":"./datasets",
-            "list_datasets":["mvadlmi"],
+            "list_datasets":["PV08"],
             "path_images":"images",
             "path_segmentations":"segmentations",
             "path_depths":"depths"
         },
         "extensions":{
-            "ext_images":".jpg",
-            "ext_segmentations":".jpg",
+            "ext_images":".bmp",
+            "ext_segmentations":".bmp",
             "ext_depths":""
         },
         "splits":{
@@ -40,36 +40,17 @@
             "split_test":0.96
         },
         "transforms":{
-            "resize":384,
+            "resize":224,
             "p_flip":0.5,
             "p_crop":0.3,
             "p_rot":0.2
         },
         "classes":{
             "1": {
-                "name": "gleason1",
+                "name": "solarpanel",
+                "color": [150,5,61],
                 "color_data": [1,1,1],
                 "color_plot_wandb": [39, 125, 161]
-            },
-            "2": {
-                "name": "gleason2",
-                "color_data": [2,2,2],
-                "color_plot_wandb": [67, 170, 139]
-            },
-            "3": {
-                "name": "gleason3",
-                "color_data": [3,3,3],
-                "color_plot_wandb": [249, 199, 79]
-            },
-            "4": {
-                "name": "gleason4",
-                "color_data": [4,4,4],
-                "color_plot_wandb": [249, 132, 74]
-            },
-            "5": {
-                "name": "gleason5",
-                "color_data": [5,5,5],
-                "color_plot_wandb": [249, 65, 68]
             }
         }
     },

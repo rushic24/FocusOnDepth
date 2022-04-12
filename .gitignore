@@ -10,3 +10,13 @@ DPT/util/__pycache__/*.pyc
 models/FocusOnDepth.p
 *.tar
 *.zip
+.cache/*
+models/*
+.ipython/*
+.local/*
+input/*
+output/*
+ops2/*
+.bash_history
+.python_history
+.jupyter/*

@@ -35,6 +35,7 @@ class Predictor(object):
         )
         self.model.to(self.device)
         path_model = os.path.join(config['General']['path_model'], 'FocusOnDepth_{}.p'.format(config['General']['model_timm']))
+        print(f"path_model is {path_model}")
         self.model.load_state_dict(
             torch.load(path_model, map_location=self.device)['model_state_dict']
         )
@@ -49,8 +50,11 @@ class Predictor(object):
             for images, names in tqdm(test_dataloader): #on load des batchs d'images
                 images = images.to(self.device)
                 _, output_segmentations = self.model(images)
+                print('output_segmentations shap', output_segmentations.shape, len(output_segmentations))
                 for i in range(len(output_segmentations)):
                     seg = output_segmentations[i].squeeze(0).argmax(dim=0).float().cpu().numpy()
+                    seg = np.where(seg > 0., 255, 0).astype(np.uint8)
+                    print(f"seg shape is {seg.shape}")
                     seg = np.stack((seg,)*3, axis=-1)
                     seg = Image.fromarray(np.uint8(seg))
                     # seg = seg.resize(original_size, resample=Image.NEAREST)

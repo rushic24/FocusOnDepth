@@ -1,3 +1,4 @@
+
 import os, errno
 import numpy as np
 import torch
@@ -23,7 +24,12 @@ class ToMask(object):
 
     def __call__(self, pil_image):
         # avoid taking the alpha channel
-        image_array = np.array(pil_image)[:, :, :3]
+        print(np.array(pil_image).shape)
+        # image_array = np.array(pil_image)[:, :, :3]
+        image_array = np.array(pil_image)
+        image_array = np.where(image_array>0, 1, 0).astype(np.uint8)
+        image_array = np.tile(image_array, (3,1,1)).transpose(1,2,0)
+        # print(image_array.shape)
         # get only one channel for the output
         output_array = np.zeros(image_array.shape, dtype="int")[:, :, 0]
 
@@ -31,8 +37,11 @@ class ToMask(object):
             rgb_color = self.palette_dictionnary[label]['color_data']
             mask = (image_array == rgb_color)
             output_array[mask[:, :, 0]] = int(label)
+        # print("output_array shape is ", output_array.shape)
+        Image.fromarray(output_array.astype(np.uint8)).save('ops2/1.png')
 
         output_array = torch.from_numpy(output_array).unsqueeze(0).long()
+        # print("output_array shape is ", output_array.shape) 
         return output_array
 
 

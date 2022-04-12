@@ -1,0 +1,17 @@
+version: "3"
+services:
+  main:
+    build: .
+    volumes:
+      - .:/root
+    ports:
+      - 8888:8888
+    network_mode: "host"
+    privileged: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

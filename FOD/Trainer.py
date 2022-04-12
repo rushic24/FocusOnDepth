@@ -12,6 +12,29 @@ from numpy.core.numeric import Inf
 from FOD.utils import get_losses, get_optimizer, get_schedulers, create_dir, mask2img
 from FOD.FocusOnDepth import FocusOnDepth
 
+import torchmetrics
+import torch
+
+ioumetric = torchmetrics.IoU(num_classes=2) # binary segmentation
+
+SMOOTH = 1e-6
+
+def iou_pytorch(outputs: torch.Tensor, labels: torch.Tensor):
+    return torch.sum(outputs & labels)/torch.sum(outputs | labels)
+    # # You can comment out this line if you are passing tensors of equal shape
+    # # But if you are passing output from UNet or something it will most probably
+    # # be with the BATCH x 1 x H x W shape
+    # outputs = outputs.squeeze(1)  # BATCH x 1 x H x W => BATCH x H x W
+    
+    # intersection = (outputs & labels).float().sum((1, 2))  # Will be zero if Truth=0 or Prediction=0
+    # union = (outputs | labels).float().sum((1, 2))         # Will be zzero if both are 0
+    
+    # iou = (intersection + SMOOTH) / (union + SMOOTH)  # We smooth our devision to avoid 0/0
+    
+    # thresholded = torch.clamp(20 * (iou - 0.5), 0, 10).ceil() / 10  # This is equal to comparing with thresolds
+    
+    # return thresholded.mean()  # Or thresholded.mean() if you are interested in average across the batch
+
 class Trainer(object):
     def __init__(self, config):
         super().__init__()
@@ -51,6 +74,7 @@ class Trainer(object):
         for epoch in range(epochs):  # loop over the dataset multiple times
             print("Epoch ", epoch+1)
             running_loss = 0.0
+            running_iou = 0.0
             self.model.train()
             pbar = tqdm(train_dataloader)
             pbar.set_description("Training")
@@ -62,27 +86,36 @@ class Trainer(object):
                 self.optimizer_scratch.zero_grad()
                 # forward + backward + optimizer
                 _, output_segmentations = self.model(X)
+                print(f"Y_segmentations before squesare {Y_segmentations.shape} output_segmentations are {output_segmentations.shape}")
+
                 Y_segmentations = Y_segmentations.squeeze(1) #1xHxW -> HxW
+
+                print(f"Y_segmentations are {Y_segmentations.shape} output_segmentations are {output_segmentations.shape}")
+
                 # get loss
                 loss = self.loss_segmentation(output_segmentations, Y_segmentations)
+                iou_score = ioumetric(output_segmentations.cpu().argmax(dim=1), Y_segmentations.cpu())
+
                 loss.backward()
                 # step optimizer
                 self.optimizer_scratch.step()
                 self.optimizer_backbone.step()
 
                 running_loss += loss.item()
+                running_iou += iou_score
+
                 if np.isnan(running_loss):
                     print('\n',
                         X.min().item(), X.max().item(),'\n',
-                        Y_depths.min().item(), Y_depths.max().item(),'\n',
-                        output_depths.min().item(), output_depths.max().item(),'\n',
                         loss.item(),
                     )
                     exit(0)
 
                 if self.config['wandb']['enable'] and ((i % 50 == 0 and i>0) or i==len(train_dataloader)-1):
                     wandb.log({"loss": running_loss/(i+1)})
-                pbar.set_postfix({'training_loss': running_loss/(i+1)})
+                pbar.set_postfix({'training_loss': running_loss/(i+1), 'iou_score': running_iou})
+            
+            print('iou after epoch', ioumetric.compute())
 
             new_val_loss = self.run_eval(val_dataloader)
 
@@ -102,6 +135,7 @@ class Trainer(object):
             :- val_dataloader -: torch dataloader
         """
         val_loss = 0.
+        val_iou = 0.
         self.model.eval()
         X_1 = None
         Y_segmentations_1 = None
@@ -119,8 +153,11 @@ class Trainer(object):
                     output_segmentations_1 = output_segmentations
                 # get loss
                 loss = self.loss_segmentation(output_segmentations, Y_segmentations)
+                iou_score = iou_pytorch(output_segmentations.argmax(dim=1), Y_segmentations)
+
                 val_loss += loss.item()
-                pbar.set_postfix({'validation_loss': val_loss/(i+1)})
+                val_iou += iou_score
+                pbar.set_postfix({'validation_loss': val_loss/(i+1), 'iou_score': val_iou/(i+1)})
             if self.config['wandb']['enable']:
                 wandb.log({"val_loss": val_loss/(i+1)})
                 self.img_logger(X_1, Y_segmentations_1, output_segmentations_1)
