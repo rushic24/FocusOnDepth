@@ -66,7 +66,7 @@ class AutoFocusDataset(Dataset):
 
         # utility func for splitting
         self.paths_images, self.paths_segmentations = get_splitted_dataset(config, self.split, dataset_name, self.paths_images, self.paths_segmentations)
-
+        print('intialized once', self.split)
         # Get the transforms
         self.transform_image, self.transform_seg = get_transforms(config)
 

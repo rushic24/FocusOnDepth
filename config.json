@@ -12,9 +12,9 @@
         "lr_scratch":3e-4,
         "loss_depth":"ssi",
         "loss_segmentation":"l1_ce",
-        "weights_loss_l1_ce":[0.001, 0.01, 0.1, 0.2, 0.3, 0.389],
+        "weights_loss_l1_ce":[0.001, 0.01, 0.1, 0.2, 0.25, 0.3],
         "momentum":0.9,
-        "epochs":300,
+        "epochs":50,
         "batch_size":2,
         "path_model":"models",
         "path_predicted_images":"output",
@@ -24,7 +24,7 @@
     "Dataset":{
         "paths":{
             "path_dataset":"./datasets",
-            "list_datasets":["PV08"],
+            "list_datasets":["PV01"],
             "path_images":"images",
             "path_segmentations":"segmentations",
             "path_depths":"depths"
@@ -35,12 +35,12 @@
             "ext_depths":""
         },
         "splits":{
-            "split_train":0.02,
-            "split_val":0.02,
-            "split_test":0.96
+            "split_train":0.05,
+            "split_val":0.05,
+            "split_test":0.90
         },
         "transforms":{
-            "resize":224,
+            "resize":384,
             "p_flip":0.5,
             "p_crop":0.3,
             "p_rot":0.2
@@ -55,8 +55,8 @@
         }
     },
     "wandb":{
-        "enable":false,
-        "username":"antocad",
+        "enable":true,
+        "username":"rushic24",
         "images_to_show":3,
         "im_h":540,
         "im_w":980

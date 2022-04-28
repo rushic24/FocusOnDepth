@@ -28,5 +28,14 @@ for dataset_name in list_data:
 val_data = ConcatDataset(autofocus_datasets_val)
 val_dataloader = DataLoader(val_data, batch_size=config['General']['batch_size'], shuffle=True)
 
+autofocus_datasets_test = []
+for dataset_name in list_data:
+    autofocus_datasets_test.append(AutoFocusDataset(config, dataset_name, 'test'))
+test_data = ConcatDataset(autofocus_datasets_test)
+test_dataloader = DataLoader(test_data, batch_size=config['General']['batch_size'], shuffle=True)
+
 trainer = Trainer(config)
 trainer.train(train_dataloader, val_dataloader)
+
+# Test set
+trainer.test_eval(test_dataloader)
