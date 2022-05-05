@@ -24,7 +24,7 @@
     "Dataset":{
         "paths":{
             "path_dataset":"./datasets",
-            "list_datasets":["PV01"],
+            "list_datasets":["PV08", "PV03", "PV01"],
             "path_images":"images",
             "path_segmentations":"segmentations",
             "path_depths":"depths"
